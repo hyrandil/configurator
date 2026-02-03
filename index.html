@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configurator Studio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">CS</div>
+          <div>
+            <p class="brand-title">Configurator Studio</p>
+            <p class="brand-subtitle">Builder & Pricing Engine</p>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h2>Element-Bibliothek</h2>
+          <p class="muted">Ziehe Elemente in den Rechner oder füge sie per Klick hinzu.</p>
+          <div class="element-list" id="elementList"></div>
+        </div>
+
+        <div class="sidebar-section">
+          <h2>Pricing Rules</h2>
+          <div class="rule-card">
+            <label class="rule-label">Globaler Rabatt</label>
+            <div class="rule-input">
+              <input type="range" id="discountRange" min="0" max="20" value="5" />
+              <span id="discountValue">5%</span>
+            </div>
+          </div>
+          <div class="rule-card">
+            <label class="rule-label">Mindestpreis</label>
+            <div class="rule-input">
+              <input type="number" id="minimumCharge" value="149" />
+              <span class="suffix">€</span>
+            </div>
+          </div>
+          <button class="ghost" id="resetBuilder">Builder zurücksetzen</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1>Rechner Builder</h1>
+            <p class="muted">Konfiguriere deinen Rechner mit modularen Elementen und Regeln.</p>
+          </div>
+          <div class="topbar-actions">
+            <button class="primary" id="saveDraft">Entwurf speichern</button>
+            <button class="accent" id="createOffer">Angebot erzeugen</button>
+          </div>
+        </header>
+
+        <section class="builder">
+          <div class="builder-header">
+            <div>
+              <h2>Cloud-Compute Angebot</h2>
+              <p class="muted">Version 1.2 • Preislisten: Standard Q4</p>
+            </div>
+            <div class="builder-meta">
+              <span>Draft</span>
+              <span class="chip">Live Pricing</span>
+            </div>
+          </div>
+
+          <div class="builder-grid">
+            <div class="canvas">
+              <h3>Konfiguration</h3>
+              <div class="canvas-body" id="canvas"></div>
+            </div>
+
+            <div class="summary">
+              <h3>Preis-Zusammenfassung</h3>
+              <div class="summary-body">
+                <div class="summary-item">
+                  <span>Zwischensumme</span>
+                  <strong id="subtotal">0 €</strong>
+                </div>
+                <div class="summary-item">
+                  <span>Rabatt</span>
+                  <strong id="discount">-0 €</strong>
+                </div>
+                <div class="summary-item">
+                  <span>Mindestpreis</span>
+                  <strong id="minimum">0 €</strong>
+                </div>
+                <div class="summary-total">
+                  <span>Gesamt / Monat</span>
+                  <strong id="total">0 €</strong>
+                </div>
+              </div>
+
+              <div class="summary-details" id="summaryDetails"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="timeline">
+          <h2>Pricing Pipeline</h2>
+          <div class="timeline-grid">
+            <div class="timeline-card">
+              <h4>1. Validierung</h4>
+              <p>Werte prüfen, Constraints & Abhängigkeiten durchsetzen.</p>
+            </div>
+            <div class="timeline-card">
+              <h4>2. Base Prices</h4>
+              <p>Unit & Option Preise je Element berechnen.</p>
+            </div>
+            <div class="timeline-card">
+              <h4>3. Staffeln</h4>
+              <p>Mengenabhängige Stufen anwenden.</p>
+            </div>
+            <div class="timeline-card">
+              <h4>4. Rabatte</h4>
+              <p>Globaler Rabatt & Bundles auf Gesamtpreis.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
