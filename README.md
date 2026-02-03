@@ -47,6 +47,21 @@ python -m http.server 8080
 5. Für Dropdowns kannst du **Optionen komplett frei definieren** (Label, Key, Preis).
 6. Unter **Einheiten** kannst du neue Einheiten anlegen oder entfernen.
 
+### Startseite: Mehrere Rechner verwalten
+
+1. Öffne die **Startseite** (Tab „Startseite“).
+2. Nutze **„Neuen Rechner anlegen“** oder dupliziere vorhandene Rechner.
+3. Öffne einen Rechner direkt aus der Übersicht.
+4. Im Builder kannst du den Rechner anschließend **speichern und benennen**.
+
+### Angebote: Bearbeiten, Notizen & Adressen
+
+1. Öffne den Tab **„Angebote“**.
+2. Wähle ein Angebot aus oder lege ein neues an.
+3. Pflege **Status, Adresse, Kontakt und Notizen**.
+4. Setze eine **manuelle Anpassung** (z. B. Rabatt) inkl. Begründung.
+5. Der **Preis-Preview** zeigt den neuen Gesamtpreis in Echtzeit.
+
 ## Projektstruktur
 
 ```text

@@ -56,11 +56,25 @@
         </header>
 
         <nav class="tabs">
-          <button class="tab active" data-tab="builder">Builder</button>
+          <button class="tab active" data-tab="dashboard">Startseite</button>
+          <button class="tab" data-tab="builder">Builder</button>
           <button class="tab" data-tab="admin">Elemente & Staffeln</button>
+          <button class="tab" data-tab="offers">Angebote</button>
         </nav>
 
-        <section class="builder" id="builderSection">
+        <section class="dashboard" id="dashboardSection">
+          <div class="dashboard-header">
+            <div>
+              <h2>Rechner-Übersicht</h2>
+              <p class="muted">Mehrere aktive Calculator, Status und letzte Änderungen.</p>
+            </div>
+            <button class="accent" id="createCalculator">Neuen Rechner anlegen</button>
+          </div>
+
+          <div class="dashboard-grid" id="calculatorGrid"></div>
+        </section>
+
+        <section class="builder hidden" id="builderSection">
           <div class="builder-header">
             <div>
               <h2>Cloud-Compute Angebot</h2>
@@ -70,6 +84,14 @@
               <span>Draft</span>
               <span class="chip">Live Pricing</span>
             </div>
+          </div>
+
+          <div class="builder-save">
+            <div class="form-row">
+              <label>Rechner-Name</label>
+              <input type="text" id="calculatorName" placeholder="z. B. Cloud Compute v2" />
+            </div>
+            <button class="primary" id="saveCalculator">Rechner speichern</button>
           </div>
 
           <div class="builder-grid">
@@ -104,7 +126,7 @@
           </div>
         </section>
 
-        <section class="timeline" id="pipelineSection">
+        <section class="timeline hidden" id="pipelineSection">
           <h2>Pricing Pipeline</h2>
           <div class="timeline-grid">
             <div class="timeline-card">
@@ -226,6 +248,112 @@
                 </div>
                 <div class="unit-list" id="unitList"></div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="offers hidden" id="offersSection">
+          <div class="admin-header">
+            <div>
+              <h2>Angebote & Entwürfe</h2>
+              <p class="muted">Angebote einsehen, Adressen pflegen, Notizen und manuelle Anpassungen vornehmen.</p>
+            </div>
+            <button class="accent" id="addOffer">Neues Angebot</button>
+          </div>
+
+          <div class="offers-grid">
+            <div class="admin-panel">
+              <h3>Aktive Angebote</h3>
+              <div class="admin-list" id="offerList"></div>
+            </div>
+
+            <div class="admin-panel">
+              <h3>Angebot bearbeiten</h3>
+              <form class="admin-form">
+                <div class="form-row">
+                  <label>Titel</label>
+                  <input type="text" id="offerTitle" />
+                </div>
+                <div class="form-row">
+                  <label>Status</label>
+                  <select id="offerStatus">
+                    <option value="draft">Draft</option>
+                    <option value="review">Review</option>
+                    <option value="sent">Sent</option>
+                    <option value="won">Won</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <label>Rechner</label>
+                  <select id="offerCalculator"></select>
+                </div>
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label>Manuelle Anpassung (€)</label>
+                    <input type="number" id="offerAdjustment" />
+                  </div>
+                  <div class="form-row">
+                    <label>Rabattgrund</label>
+                    <input type="text" id="offerAdjustmentReason" placeholder="z. B. Q4 Promo" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <label>Notizen</label>
+                  <textarea id="offerNotes" rows="4"></textarea>
+                </div>
+              </form>
+            </div>
+
+            <div class="admin-panel">
+              <h3>Adresse & Kontakt</h3>
+              <form class="admin-form">
+                <div class="form-row">
+                  <label>Firma</label>
+                  <input type="text" id="offerCompany" />
+                </div>
+                <div class="form-row">
+                  <label>Kontaktperson</label>
+                  <input type="text" id="offerContact" />
+                </div>
+                <div class="form-row">
+                  <label>Straße</label>
+                  <input type="text" id="offerStreet" />
+                </div>
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label>PLZ</label>
+                    <input type="text" id="offerZip" />
+                  </div>
+                  <div class="form-row">
+                    <label>Stadt</label>
+                    <input type="text" id="offerCity" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <label>Land</label>
+                  <input type="text" id="offerCountry" />
+                </div>
+              </form>
+            </div>
+
+            <div class="admin-panel">
+              <h3>Preis-Preview</h3>
+              <div class="summary-body">
+                <div class="summary-item">
+                  <span>Listenpreis</span>
+                  <strong id="offerBaseTotal">0 €</strong>
+                </div>
+                <div class="summary-item">
+                  <span>Anpassung</span>
+                  <strong id="offerAdjustmentPreview">0 €</strong>
+                </div>
+                <div class="summary-total">
+                  <span>Neuer Gesamtpreis</span>
+                  <strong id="offerFinalTotal">0 €</strong>
+                </div>
+              </div>
+              <button class="primary" id="saveOffer">Änderungen speichern</button>
             </div>
           </div>
         </section>

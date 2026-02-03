@@ -203,6 +203,7 @@ button.accent {
   margin-top: 24px;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .tab {
@@ -228,6 +229,25 @@ button.accent {
   border: 1px solid var(--border);
   padding: 26px;
   box-shadow: var(--shadow);
+}
+
+.builder-save {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.builder-save .form-row {
+  flex: 1;
+}
+
+.builder-save input {
+  background: #0f1324;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 10px;
 }
 
 .builder-header {
@@ -351,6 +371,80 @@ button.accent {
 
 .hidden {
   display: none;
+}
+
+.dashboard {
+  margin-top: 30px;
+  display: grid;
+  gap: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.calculator-card {
+  background: var(--panel-light);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+
+.calculator-card .meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.calculator-card .actions {
+  display: flex;
+  gap: 10px;
+}
+
+.calculator-card button {
+  flex: 1;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.offers {
+  margin-top: 30px;
+  background: rgba(10, 13, 22, 0.7);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  padding: 26px;
+}
+
+.offers-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.6fr 1.3fr;
+  gap: 18px;
+}
+
+.offers textarea {
+  background: #0f1324;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  resize: vertical;
 }
 
 .admin {
@@ -548,6 +642,10 @@ button.accent {
   }
 
   .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offers-grid {
     grid-template-columns: 1fr;
   }
 

@@ -89,11 +89,76 @@ const elements = [
 
 const units = ["vCPU", "GB", "TB", "Option", "Tier", "User", "Projekt"];
 
+const calculators = [
+  {
+    id: "calc-1",
+    name: "Cloud Compute v1",
+    status: "Active",
+    updatedAt: "Heute",
+    elementIds: ["cpu", "ram", "gpu"],
+    values: {
+      cpu: 4,
+      ram: 16,
+      gpu: "none",
+    },
+  },
+  {
+    id: "calc-2",
+    name: "Storage Booster",
+    status: "Draft",
+    updatedAt: "Gestern",
+    elementIds: ["storage", "support"],
+    values: {
+      storage: 5,
+      support: "business",
+    },
+  },
+];
+
+const offers = [
+  {
+    id: "offer-1001",
+    title: "Angebot ACME GmbH",
+    status: "draft",
+    calculatorId: "calc-1",
+    adjustment: -120,
+    adjustmentReason: "Q4 Promo",
+    notes: "Priorität: schnelles Feedback.",
+    contact: {
+      company: "ACME GmbH",
+      contactName: "Laura König",
+      street: "Hauptstraße 12",
+      zip: "10115",
+      city: "Berlin",
+      country: "DE",
+    },
+  },
+  {
+    id: "offer-1002",
+    title: "Angebot Helio AG",
+    status: "review",
+    calculatorId: "calc-2",
+    adjustment: 0,
+    adjustmentReason: "",
+    notes: "Budgetprüfung läuft.",
+    contact: {
+      company: "Helio AG",
+      contactName: "Mila Schröder",
+      street: "Solarweg 8",
+      zip: "80331",
+      city: "München",
+      country: "DE",
+    },
+  },
+];
+
 const state = {
   selected: ["cpu", "ram", "gpu"],
   discount: 5,
   minimumCharge: 149,
   activeElementId: "cpu",
+  activeCalculatorId: "calc-1",
+  activeOfferId: "offer-1001",
 };
 
 const elementList = document.getElementById("elementList");
@@ -107,6 +172,7 @@ const discountRange = document.getElementById("discountRange");
 const discountValue = document.getElementById("discountValue");
 const minimumCharge = document.getElementById("minimumCharge");
 const toast = document.getElementById("toast");
+const calculatorName = document.getElementById("calculatorName");
 
 const adminList = document.getElementById("adminList");
 const elementName = document.getElementById("elementName");
@@ -126,6 +192,25 @@ const optionsList = document.getElementById("optionsList");
 const unitList = document.getElementById("unitList");
 const newUnit = document.getElementById("newUnit");
 
+const calculatorGrid = document.getElementById("calculatorGrid");
+
+const offerList = document.getElementById("offerList");
+const offerTitle = document.getElementById("offerTitle");
+const offerStatus = document.getElementById("offerStatus");
+const offerCalculator = document.getElementById("offerCalculator");
+const offerAdjustment = document.getElementById("offerAdjustment");
+const offerAdjustmentReason = document.getElementById("offerAdjustmentReason");
+const offerNotes = document.getElementById("offerNotes");
+const offerCompany = document.getElementById("offerCompany");
+const offerContact = document.getElementById("offerContact");
+const offerStreet = document.getElementById("offerStreet");
+const offerZip = document.getElementById("offerZip");
+const offerCity = document.getElementById("offerCity");
+const offerCountry = document.getElementById("offerCountry");
+const offerBaseTotal = document.getElementById("offerBaseTotal");
+const offerAdjustmentPreview = document.getElementById("offerAdjustmentPreview");
+const offerFinalTotal = document.getElementById("offerFinalTotal");
+
 const formatMoney = (value) => `${value.toFixed(2)} €`;
 
 const showToast = (message) => {
@@ -134,6 +219,8 @@ const showToast = (message) => {
   clearTimeout(toast.hideTimeout);
   toast.hideTimeout = setTimeout(() => toast.classList.remove("show"), 2200);
 };
+
+const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const tieredPrice = (item, quantity) => {
   if (!item.tiersEnabled || item.tiers.length === 0) {
@@ -155,6 +242,23 @@ const getLinePrice = (item) => {
     return Math.max(base, item.minimum);
   }
   return base;
+};
+
+const computeTotalForCalculator = (calculator) => {
+  const elementIds = calculator.elementIds ?? [];
+  let subtotal = 0;
+  elementIds.forEach((id) => {
+    const element = elements.find((entry) => entry.id === id);
+    if (!element) return;
+    const temp = { ...clone(element) };
+    if (calculator.values && calculator.values[id] !== undefined) {
+      temp.value = calculator.values[id];
+    }
+    subtotal += getLinePrice(temp);
+  });
+  const discountValueAmount = subtotal * (state.discount / 100);
+  const discounted = subtotal - discountValueAmount;
+  return Math.max(discounted, state.minimumCharge);
 };
 
 const renderLibrary = () => {
@@ -528,13 +632,226 @@ const saveElementChanges = () => {
   }
   if (previousId !== item.id) {
     state.selected = state.selected.map((id) => (id === previousId ? item.id : id));
+    calculators.forEach((calculator) => {
+      calculator.elementIds = calculator.elementIds.map((id) => (id === previousId ? item.id : id));
+      if (calculator.values[previousId] !== undefined) {
+        calculator.values[item.id] = calculator.values[previousId];
+        delete calculator.values[previousId];
+      }
+    });
     state.activeElementId = item.id;
   }
   renderLibrary();
   renderAdminList();
   renderCanvas();
+  renderCalculators();
+  renderOfferCalculatorOptions();
   updateSummary();
+  updateOfferPreview();
   showToast("Element aktualisiert");
+};
+
+const renderCalculators = () => {
+  calculatorGrid.innerHTML = "";
+  calculators.forEach((calculator) => {
+    const card = document.createElement("div");
+    card.className = "calculator-card";
+    const total = computeTotalForCalculator(calculator);
+    card.innerHTML = `
+      <div>
+        <strong>${calculator.name}</strong>
+        <p class="muted">${calculator.elementIds.length} Elemente</p>
+      </div>
+      <div class="meta">
+        <span>${calculator.status}</span>
+        <span>${calculator.updatedAt}</span>
+      </div>
+      <div class="summary-item">
+        <span>Preis</span>
+        <strong>${formatMoney(total)}</strong>
+      </div>
+      <div class="actions">
+        <button data-open="${calculator.id}">Öffnen</button>
+        <button data-duplicate="${calculator.id}">Duplizieren</button>
+      </div>
+    `;
+    card.querySelector("button[data-open]").addEventListener("click", () => loadCalculator(calculator.id));
+    card.querySelector("button[data-duplicate]").addEventListener("click", () => duplicateCalculator(calculator.id));
+    calculatorGrid.appendChild(card);
+  });
+};
+
+const loadCalculator = (calculatorId) => {
+  const calculator = calculators.find((entry) => entry.id === calculatorId);
+  if (!calculator) return;
+  state.activeCalculatorId = calculator.id;
+  state.selected = [...calculator.elementIds];
+  Object.entries(calculator.values).forEach(([key, value]) => {
+    const item = elements.find((entry) => entry.id === key);
+    if (item) {
+      item.value = value;
+    }
+  });
+  calculatorName.value = calculator.name;
+  renderCanvas();
+  updateSummary();
+  showToast("Rechner geladen");
+};
+
+const duplicateCalculator = (calculatorId) => {
+  const calculator = calculators.find((entry) => entry.id === calculatorId);
+  if (!calculator) return;
+  const copy = {
+    ...clone(calculator),
+    id: `calc-${Date.now()}`,
+    name: `${calculator.name} Kopie`,
+    status: "Draft",
+    updatedAt: "Gerade eben",
+  };
+  calculators.push(copy);
+  renderCalculators();
+  renderOfferCalculatorOptions();
+  showToast("Rechner dupliziert");
+};
+
+const createCalculator = () => {
+  const newCalc = {
+    id: `calc-${Date.now()}`,
+    name: "Neuer Rechner",
+    status: "Draft",
+    updatedAt: "Gerade eben",
+    elementIds: [...state.selected],
+    values: state.selected.reduce((acc, id) => {
+      const item = elements.find((entry) => entry.id === id);
+      acc[id] = item?.value ?? 0;
+      return acc;
+    }, {}),
+  };
+  calculators.push(newCalc);
+  renderCalculators();
+  renderOfferCalculatorOptions();
+  showToast("Rechner erstellt");
+};
+
+const saveCalculator = () => {
+  const name = calculatorName.value.trim();
+  if (!name) {
+    showToast("Bitte Rechner-Name eingeben");
+    return;
+  }
+  const active = calculators.find((entry) => entry.id === state.activeCalculatorId);
+  if (!active) {
+    createCalculator();
+    return;
+  }
+  active.name = name;
+  active.updatedAt = "Gerade eben";
+  active.elementIds = [...state.selected];
+  active.values = state.selected.reduce((acc, id) => {
+    const item = elements.find((entry) => entry.id === id);
+    acc[id] = item?.value ?? 0;
+    return acc;
+  }, {});
+  renderCalculators();
+  renderOfferCalculatorOptions();
+  showToast("Rechner gespeichert");
+};
+
+const renderOfferList = () => {
+  offerList.innerHTML = "";
+  offers.forEach((offer) => {
+    const row = document.createElement("div");
+    row.className = `admin-item ${offer.id === state.activeOfferId ? "active" : ""}`;
+    row.innerHTML = `
+      <strong>${offer.title}</strong>
+      <span class="muted">${offer.status.toUpperCase()} • ${offer.id}</span>
+    `;
+    row.addEventListener("click", () => {
+      state.activeOfferId = offer.id;
+      renderOfferList();
+      renderOfferEditor();
+    });
+    offerList.appendChild(row);
+  });
+};
+
+const renderOfferCalculatorOptions = () => {
+  offerCalculator.innerHTML = calculators
+    .map((calculator) => `<option value="${calculator.id}">${calculator.name}</option>`)
+    .join("");
+};
+
+const renderOfferEditor = () => {
+  const offer = offers.find((entry) => entry.id === state.activeOfferId) ?? offers[0];
+  state.activeOfferId = offer.id;
+  offerTitle.value = offer.title;
+  offerStatus.value = offer.status;
+  offerCalculator.value = offer.calculatorId;
+  offerAdjustment.value = offer.adjustment;
+  offerAdjustmentReason.value = offer.adjustmentReason;
+  offerNotes.value = offer.notes;
+  offerCompany.value = offer.contact.company;
+  offerContact.value = offer.contact.contactName;
+  offerStreet.value = offer.contact.street;
+  offerZip.value = offer.contact.zip;
+  offerCity.value = offer.contact.city;
+  offerCountry.value = offer.contact.country;
+  updateOfferPreview();
+};
+
+const updateOfferPreview = () => {
+  const offer = offers.find((entry) => entry.id === state.activeOfferId);
+  if (!offer) return;
+  const calculator = calculators.find((entry) => entry.id === offer.calculatorId);
+  const baseTotal = calculator ? computeTotalForCalculator(calculator) : 0;
+  offerBaseTotal.textContent = formatMoney(baseTotal);
+  offerAdjustmentPreview.textContent = formatMoney(offer.adjustment);
+  offerFinalTotal.textContent = formatMoney(baseTotal + offer.adjustment);
+};
+
+const saveOfferChanges = () => {
+  const offer = offers.find((entry) => entry.id === state.activeOfferId);
+  if (!offer) return;
+  offer.title = offerTitle.value.trim() || offer.title;
+  offer.status = offerStatus.value;
+  offer.calculatorId = offerCalculator.value;
+  offer.adjustment = Number(offerAdjustment.value || 0);
+  offer.adjustmentReason = offerAdjustmentReason.value.trim();
+  offer.notes = offerNotes.value.trim();
+  offer.contact.company = offerCompany.value.trim();
+  offer.contact.contactName = offerContact.value.trim();
+  offer.contact.street = offerStreet.value.trim();
+  offer.contact.zip = offerZip.value.trim();
+  offer.contact.city = offerCity.value.trim();
+  offer.contact.country = offerCountry.value.trim();
+  renderOfferList();
+  updateOfferPreview();
+  showToast("Angebot aktualisiert");
+};
+
+const addOffer = () => {
+  const newOffer = {
+    id: `offer-${Date.now()}`,
+    title: "Neues Angebot",
+    status: "draft",
+    calculatorId: calculators[0]?.id ?? "",
+    adjustment: 0,
+    adjustmentReason: "",
+    notes: "",
+    contact: {
+      company: "",
+      contactName: "",
+      street: "",
+      zip: "",
+      city: "",
+      country: "",
+    },
+  };
+  offers.push(newOffer);
+  state.activeOfferId = newOffer.id;
+  renderOfferList();
+  renderOfferEditor();
+  showToast("Neues Angebot erstellt");
 };
 
 const wireAdminInputs = () => {
@@ -585,15 +902,40 @@ const wireAdminInputs = () => {
   });
 };
 
+const wireOfferInputs = () => {
+  [
+    offerTitle,
+    offerStatus,
+    offerCalculator,
+    offerAdjustment,
+    offerAdjustmentReason,
+    offerNotes,
+    offerCompany,
+    offerContact,
+    offerStreet,
+    offerZip,
+    offerCity,
+    offerCountry,
+  ].forEach((input) => {
+    input.addEventListener("input", () => saveOfferChanges());
+    input.addEventListener("change", () => saveOfferChanges());
+  });
+
+  document.getElementById("addOffer").addEventListener("click", addOffer);
+  document.getElementById("saveOffer").addEventListener("click", saveOfferChanges);
+};
+
 const wireTabs = () => {
   document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       document.querySelectorAll(".tab").forEach((btn) => btn.classList.remove("active"));
       tab.classList.add("active");
-      const isAdmin = tab.dataset.tab === "admin";
-      document.getElementById("builderSection").classList.toggle("hidden", isAdmin);
-      document.getElementById("pipelineSection").classList.toggle("hidden", isAdmin);
-      document.getElementById("adminSection").classList.toggle("hidden", !isAdmin);
+      const target = tab.dataset.tab;
+      document.getElementById("dashboardSection").classList.toggle("hidden", target !== "dashboard");
+      document.getElementById("builderSection").classList.toggle("hidden", target !== "builder");
+      document.getElementById("pipelineSection").classList.toggle("hidden", target !== "builder");
+      document.getElementById("adminSection").classList.toggle("hidden", target !== "admin");
+      document.getElementById("offersSection").classList.toggle("hidden", target !== "offers");
     });
   });
 };
@@ -603,25 +945,49 @@ const wireActions = () => {
     state.discount = Number(event.target.value);
     discountValue.textContent = `${state.discount}%`;
     updateSummary();
+    renderCalculators();
+    updateOfferPreview();
   });
 
   minimumCharge.addEventListener("input", (event) => {
     state.minimumCharge = Number(event.target.value || 0);
     updateSummary();
+    renderCalculators();
+    updateOfferPreview();
   });
 
   document.getElementById("resetBuilder").addEventListener("click", resetBuilder);
   document.getElementById("saveDraft").addEventListener("click", () => showToast("Entwurf gespeichert"));
   document.getElementById("createOffer").addEventListener("click", () => showToast("Angebot erstellt"));
+  document.getElementById("saveCalculator").addEventListener("click", saveCalculator);
+  document.getElementById("createCalculator").addEventListener("click", createCalculator);
+};
+
+const applyCalculatorSelection = () => {
+  const active = calculators.find((entry) => entry.id === state.activeCalculatorId) ?? calculators[0];
+  if (!active) return;
+  state.activeCalculatorId = active.id;
+  calculatorName.value = active.name;
+  state.selected = [...active.elementIds];
+  Object.entries(active.values).forEach(([key, value]) => {
+    const item = elements.find((entry) => entry.id === key);
+    if (item) item.value = value;
+  });
 };
 
 renderUnitOptions();
 renderLibrary();
+applyCalculatorSelection();
 renderCanvas();
 renderAdminList();
 renderAdminEditor();
 renderUnits();
+renderCalculators();
+renderOfferCalculatorOptions();
+renderOfferList();
+renderOfferEditor();
 updateSummary();
 wireActions();
 wireTabs();
 wireAdminInputs();
+wireOfferInputs();
