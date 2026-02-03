@@ -46,8 +46,8 @@
       <main class="main">
         <header class="topbar">
           <div>
-            <h1>Rechner Builder</h1>
-            <p class="muted">Konfiguriere deinen Rechner mit modularen Elementen und Regeln.</p>
+            <h1>Configurator Studio</h1>
+            <p class="muted">Builder & Administration für Elemente, Einheiten und Staffeln.</p>
           </div>
           <div class="topbar-actions">
             <button class="primary" id="saveDraft">Entwurf speichern</button>
@@ -55,7 +55,12 @@
           </div>
         </header>
 
-        <section class="builder">
+        <nav class="tabs">
+          <button class="tab active" data-tab="builder">Builder</button>
+          <button class="tab" data-tab="admin">Elemente & Staffeln</button>
+        </nav>
+
+        <section class="builder" id="builderSection">
           <div class="builder-header">
             <div>
               <h2>Cloud-Compute Angebot</h2>
@@ -99,7 +104,7 @@
           </div>
         </section>
 
-        <section class="timeline">
+        <section class="timeline" id="pipelineSection">
           <h2>Pricing Pipeline</h2>
           <div class="timeline-grid">
             <div class="timeline-card">
@@ -117,6 +122,110 @@
             <div class="timeline-card">
               <h4>4. Rabatte</h4>
               <p>Globaler Rabatt & Bundles auf Gesamtpreis.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin hidden" id="adminSection">
+          <div class="admin-header">
+            <div>
+              <h2>Element-Management</h2>
+              <p class="muted">Einheiten, Preise, Optionen und Staffelpreise zentral verwalten.</p>
+            </div>
+            <button class="accent" id="addElement">Neues Element</button>
+          </div>
+
+          <div class="admin-grid">
+            <div class="admin-panel">
+              <h3>Elemente</h3>
+              <div class="admin-list" id="adminList"></div>
+            </div>
+
+            <div class="admin-panel">
+              <h3>Element bearbeiten</h3>
+              <form class="admin-form" id="adminForm">
+                <div class="form-row">
+                  <label>Name</label>
+                  <input type="text" id="elementName" />
+                </div>
+                <div class="form-row">
+                  <label>Key</label>
+                  <input type="text" id="elementKey" />
+                </div>
+                <div class="form-row">
+                  <label>Einheit</label>
+                  <select id="elementUnit"></select>
+                </div>
+                <div class="form-row">
+                  <label>Typ</label>
+                  <select id="elementType">
+                    <option value="range">Slider</option>
+                    <option value="number">Number</option>
+                    <option value="select">Dropdown</option>
+                  </select>
+                </div>
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label>Min</label>
+                    <input type="number" id="elementMin" />
+                  </div>
+                  <div class="form-row">
+                    <label>Max</label>
+                    <input type="number" id="elementMax" />
+                  </div>
+                  <div class="form-row">
+                    <label>Step</label>
+                    <input type="number" id="elementStep" />
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label>Unit-Preis (€)</label>
+                    <input type="number" id="elementUnitPrice" />
+                  </div>
+                  <div class="form-row">
+                    <label>Mindestpreis (€)</label>
+                    <input type="number" id="elementMinimum" />
+                  </div>
+                </div>
+
+                <div class="form-row inline">
+                  <input type="checkbox" id="tiersEnabled" />
+                  <label for="tiersEnabled">Staffelpreise aktivieren</label>
+                </div>
+
+                <div class="tiers" id="tiersPanel">
+                  <div class="tiers-header">
+                    <h4>Staffeln</h4>
+                    <button type="button" class="ghost" id="addTier">Staffel hinzufügen</button>
+                  </div>
+                  <div class="tiers-list" id="tiersList"></div>
+                </div>
+
+                <div class="options" id="optionsPanel">
+                  <div class="tiers-header">
+                    <h4>Dropdown-Optionen</h4>
+                    <button type="button" class="ghost" id="addOption">Option hinzufügen</button>
+                  </div>
+                  <div class="tiers-list" id="optionsList"></div>
+                </div>
+
+                <button type="button" class="primary" id="saveElement">Änderungen übernehmen</button>
+              </form>
+            </div>
+
+            <div class="admin-panel">
+              <h3>Einheiten</h3>
+              <div class="units">
+                <div class="form-row">
+                  <label>Neue Einheit</label>
+                  <div class="unit-row">
+                    <input type="text" id="newUnit" placeholder="z. B. vCPU / GB" />
+                    <button class="accent" id="addUnit">Hinzufügen</button>
+                  </div>
+                </div>
+                <div class="unit-list" id="unitList"></div>
+              </div>
             </div>
           </div>
         </section>

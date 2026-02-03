@@ -38,6 +38,15 @@ python -m http.server 8080
 4. **Pricing prüfen**: Die Preis-Zusammenfassung aktualisiert sich sofort.
 5. **Workflow testen**: Nutze „Entwurf speichern“ oder „Angebot erzeugen“ für Demo-Aktionen.
 
+### Admin: Elemente, Einheiten & Staffeln verwalten
+
+1. Öffne den Tab **„Elemente & Staffeln“**.
+2. Wähle ein Element aus der Liste oder erstelle ein neues Element.
+3. Passe **Typ, Einheit, Min/Max/Step, Unit-Preis und Mindestpreis** an.
+4. Aktiviere **Staffelpreise** und pflege beliebig viele Stufen.
+5. Für Dropdowns kannst du **Optionen komplett frei definieren** (Label, Key, Preis).
+6. Unter **Einheiten** kannst du neue Einheiten anlegen oder entfernen.
+
 ## Projektstruktur
 
 ```text

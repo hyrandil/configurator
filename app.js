@@ -1,4 +1,4 @@
-const catalog = [
+const elements = [
   {
     id: "cpu",
     title: "vCPU",
@@ -10,6 +10,10 @@ const catalog = [
     step: 1,
     value: 4,
     unitPrice: 12,
+    minimum: 0,
+    tiersEnabled: false,
+    tiers: [],
+    options: [],
   },
   {
     id: "ram",
@@ -22,11 +26,14 @@ const catalog = [
     step: 4,
     value: 16,
     unitPrice: 3.5,
+    minimum: 0,
+    tiersEnabled: true,
     tiers: [
       { upTo: 64, price: 3.5 },
       { upTo: 128, price: 3.0 },
       { upTo: Infinity, price: 2.6 },
     ],
+    options: [],
   },
   {
     id: "gpu",
@@ -35,6 +42,10 @@ const catalog = [
     type: "select",
     unit: "Option",
     value: "none",
+    unitPrice: 0,
+    minimum: 0,
+    tiersEnabled: false,
+    tiers: [],
     options: [
       { value: "none", label: "Keine GPU", price: 0 },
       { value: "a10", label: "NVIDIA A10", price: 180 },
@@ -53,6 +64,9 @@ const catalog = [
     value: 2,
     unitPrice: 35,
     minimum: 90,
+    tiersEnabled: false,
+    tiers: [],
+    options: [],
   },
   {
     id: "support",
@@ -61,6 +75,10 @@ const catalog = [
     type: "select",
     unit: "Tier",
     value: "business",
+    unitPrice: 0,
+    minimum: 0,
+    tiersEnabled: false,
+    tiers: [],
     options: [
       { value: "starter", label: "Starter (8x5)", price: 49 },
       { value: "business", label: "Business (12x5)", price: 129 },
@@ -69,10 +87,13 @@ const catalog = [
   },
 ];
 
+const units = ["vCPU", "GB", "TB", "Option", "Tier", "User", "Projekt"];
+
 const state = {
   selected: ["cpu", "ram", "gpu"],
   discount: 5,
   minimumCharge: 149,
+  activeElementId: "cpu",
 };
 
 const elementList = document.getElementById("elementList");
@@ -87,6 +108,24 @@ const discountValue = document.getElementById("discountValue");
 const minimumCharge = document.getElementById("minimumCharge");
 const toast = document.getElementById("toast");
 
+const adminList = document.getElementById("adminList");
+const elementName = document.getElementById("elementName");
+const elementKey = document.getElementById("elementKey");
+const elementUnit = document.getElementById("elementUnit");
+const elementType = document.getElementById("elementType");
+const elementMin = document.getElementById("elementMin");
+const elementMax = document.getElementById("elementMax");
+const elementStep = document.getElementById("elementStep");
+const elementUnitPrice = document.getElementById("elementUnitPrice");
+const elementMinimum = document.getElementById("elementMinimum");
+const tiersEnabled = document.getElementById("tiersEnabled");
+const tiersPanel = document.getElementById("tiersPanel");
+const tiersList = document.getElementById("tiersList");
+const optionsPanel = document.getElementById("optionsPanel");
+const optionsList = document.getElementById("optionsList");
+const unitList = document.getElementById("unitList");
+const newUnit = document.getElementById("newUnit");
+
 const formatMoney = (value) => `${value.toFixed(2)} €`;
 
 const showToast = (message) => {
@@ -97,7 +136,7 @@ const showToast = (message) => {
 };
 
 const tieredPrice = (item, quantity) => {
-  if (!item.tiers) {
+  if (!item.tiersEnabled || item.tiers.length === 0) {
     return quantity * item.unitPrice;
   }
   const tier = item.tiers.find((entry) => quantity <= entry.upTo) ?? item.tiers.at(-1);
@@ -120,7 +159,7 @@ const getLinePrice = (item) => {
 
 const renderLibrary = () => {
   elementList.innerHTML = "";
-  catalog.forEach((item) => {
+  elements.forEach((item) => {
     const card = document.createElement("div");
     card.className = "element-card";
     card.innerHTML = `
@@ -136,7 +175,7 @@ const renderLibrary = () => {
 const renderCanvas = () => {
   canvas.innerHTML = "";
   state.selected.forEach((id) => {
-    const item = catalog.find((entry) => entry.id === id);
+    const item = elements.find((entry) => entry.id === id);
     if (!item) return;
 
     const wrapper = document.createElement("div");
@@ -196,7 +235,7 @@ const renderCanvas = () => {
 
   canvas.querySelectorAll("input[data-range]").forEach((input) => {
     input.addEventListener("input", (event) => {
-      const item = catalog.find((entry) => entry.id === event.target.dataset.range);
+      const item = elements.find((entry) => entry.id === event.target.dataset.range);
       item.value = Number(event.target.value);
       event.target.nextElementSibling.textContent = `${item.value} ${item.unit}`;
       updateSummary();
@@ -205,7 +244,7 @@ const renderCanvas = () => {
 
   canvas.querySelectorAll("select[data-select]").forEach((select) => {
     select.addEventListener("change", (event) => {
-      const item = catalog.find((entry) => entry.id === event.target.dataset.select);
+      const item = elements.find((entry) => entry.id === event.target.dataset.select);
       item.value = event.target.value;
       updateSummary();
     });
@@ -213,7 +252,7 @@ const renderCanvas = () => {
 
   canvas.querySelectorAll("input[data-number]").forEach((input) => {
     input.addEventListener("input", (event) => {
-      const item = catalog.find((entry) => entry.id === event.target.dataset.number);
+      const item = elements.find((entry) => entry.id === event.target.dataset.number);
       item.value = Number(event.target.value);
       updateSummary();
     });
@@ -221,7 +260,9 @@ const renderCanvas = () => {
 };
 
 const updateSummary = () => {
-  const selectedItems = state.selected.map((id) => catalog.find((entry) => entry.id === id));
+  const selectedItems = state.selected
+    .map((id) => elements.find((entry) => entry.id === id))
+    .filter(Boolean);
   const lineItems = selectedItems.map((item) => ({
     id: item.id,
     name: item.title,
@@ -260,16 +301,301 @@ const removeElement = (id) => {
 
 const resetBuilder = () => {
   state.selected = ["cpu", "ram", "gpu"];
-  catalog.forEach((item) => {
-    if (item.id === "cpu") item.value = 4;
-    if (item.id === "ram") item.value = 16;
-    if (item.id === "gpu") item.value = "none";
-    if (item.id === "storage") item.value = 2;
-    if (item.id === "support") item.value = "business";
+  elements.forEach((item) => {
+    if (item.type === "select") {
+      item.value = item.options[0]?.value ?? "";
+    }
+    if (item.type === "range" || item.type === "number") {
+      item.value = item.min ?? 0;
+    }
   });
   renderCanvas();
   updateSummary();
   showToast("Builder zurückgesetzt");
+};
+
+const renderAdminList = () => {
+  adminList.innerHTML = "";
+  elements.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = `admin-item ${item.id === state.activeElementId ? "active" : ""}`;
+    row.innerHTML = `
+      <strong>${item.title}</strong>
+      <span class="muted">${item.unit} • ${item.type}</span>
+    `;
+    row.addEventListener("click", () => {
+      state.activeElementId = item.id;
+      renderAdminList();
+      renderAdminEditor();
+    });
+    adminList.appendChild(row);
+  });
+};
+
+const renderUnitOptions = () => {
+  elementUnit.innerHTML = units.map((unit) => `<option value="${unit}">${unit}</option>`).join("");
+};
+
+const renderUnits = () => {
+  unitList.innerHTML = "";
+  units.forEach((unit) => {
+    const row = document.createElement("div");
+    row.className = "unit-item";
+    row.innerHTML = `
+      <span>${unit}</span>
+      <button class="ghost" data-unit="${unit}">Entfernen</button>
+    `;
+    row.querySelector("button").addEventListener("click", () => {
+      if (units.length === 1) {
+        showToast("Mindestens eine Einheit behalten");
+        return;
+      }
+      const index = units.indexOf(unit);
+      units.splice(index, 1);
+      elements.forEach((item) => {
+        if (item.unit === unit) {
+          item.unit = units[0];
+        }
+      });
+      renderUnitOptions();
+      renderUnits();
+      renderAdminEditor();
+      renderCanvas();
+      updateSummary();
+    });
+    unitList.appendChild(row);
+  });
+};
+
+const renderTiers = (item) => {
+  tiersList.innerHTML = "";
+  item.tiers.forEach((tier, index) => {
+    const row = document.createElement("div");
+    row.className = "tier-row";
+    const upToValue = tier.upTo === Infinity ? "∞" : tier.upTo;
+    row.innerHTML = `
+      <input type="text" value="${upToValue}" data-tier="${index}" data-field="upTo" />
+      <input type="number" value="${tier.price}" data-tier="${index}" data-field="price" />
+      <button class="ghost" data-remove-tier="${index}">Entfernen</button>
+    `;
+    tiersList.appendChild(row);
+  });
+
+  tiersList.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", (event) => {
+      const index = Number(event.target.dataset.tier);
+      const field = event.target.dataset.field;
+      const value = event.target.value;
+      if (field === "upTo") {
+        const parsed = value === "∞" ? Infinity : Number(value);
+        item.tiers[index].upTo = Number.isNaN(parsed) ? Infinity : parsed;
+      } else {
+        item.tiers[index].price = Number(value || 0);
+      }
+      updateSummary();
+    });
+  });
+
+  tiersList.querySelectorAll("button[data-remove-tier]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.removeTier);
+      item.tiers.splice(index, 1);
+      renderTiers(item);
+      updateSummary();
+    });
+  });
+};
+
+const renderOptions = (item) => {
+  optionsList.innerHTML = "";
+  item.options.forEach((option, index) => {
+    const row = document.createElement("div");
+    row.className = "option-row";
+    row.innerHTML = `
+      <input type="text" value="${option.label}" data-option="${index}" data-field="label" />
+      <input type="text" value="${option.value}" data-option="${index}" data-field="value" />
+      <input type="number" value="${option.price}" data-option="${index}" data-field="price" />
+      <button class="ghost" data-remove-option="${index}">Entfernen</button>
+    `;
+    optionsList.appendChild(row);
+  });
+
+  optionsList.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", (event) => {
+      const index = Number(event.target.dataset.option);
+      const field = event.target.dataset.field;
+      const value = event.target.value;
+      if (field === "price") {
+        item.options[index][field] = Number(value || 0);
+      } else {
+        item.options[index][field] = value;
+      }
+      renderLibrary();
+      renderCanvas();
+      updateSummary();
+    });
+  });
+
+  optionsList.querySelectorAll("button[data-remove-option]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.removeOption);
+      item.options.splice(index, 1);
+      if (item.type === "select" && item.options.length === 0) {
+        item.options.push({ value: "option", label: "Option", price: 0 });
+      }
+      if (item.type === "select") {
+        item.value = item.options[0]?.value ?? "";
+      }
+      renderOptions(item);
+      renderCanvas();
+      updateSummary();
+    });
+  });
+};
+
+const renderAdminEditor = () => {
+  const item = elements.find((entry) => entry.id === state.activeElementId) ?? elements[0];
+  state.activeElementId = item.id;
+  elementName.value = item.title;
+  elementKey.value = item.id;
+  elementUnit.value = item.unit;
+  elementType.value = item.type;
+  elementMin.value = item.min ?? 0;
+  elementMax.value = item.max ?? 0;
+  elementStep.value = item.step ?? 1;
+  elementUnitPrice.value = item.unitPrice ?? 0;
+  elementMinimum.value = item.minimum ?? 0;
+  tiersEnabled.checked = item.tiersEnabled;
+
+  tiersPanel.classList.toggle("hidden", item.type === "select");
+  optionsPanel.classList.toggle("hidden", item.type !== "select");
+
+  renderTiers(item);
+  renderOptions(item);
+};
+
+const addNewElement = () => {
+  const id = `element-${Date.now()}`;
+  const newItem = {
+    id,
+    title: "Neues Element",
+    description: "Beschreibung hinzufügen",
+    type: "range",
+    unit: units[0],
+    min: 1,
+    max: 10,
+    step: 1,
+    value: 1,
+    unitPrice: 10,
+    minimum: 0,
+    tiersEnabled: false,
+    tiers: [],
+    options: [{ value: "option", label: "Option", price: 0 }],
+  };
+  elements.push(newItem);
+  state.activeElementId = newItem.id;
+  renderLibrary();
+  renderAdminList();
+  renderAdminEditor();
+  showToast("Neues Element erstellt");
+};
+
+const saveElementChanges = () => {
+  const item = elements.find((entry) => entry.id === state.activeElementId);
+  if (!item) return;
+  const nextId = elementKey.value.trim() || item.id;
+  if (nextId !== item.id && elements.some((entry) => entry.id === nextId)) {
+    showToast("Key bereits vergeben");
+    elementKey.value = item.id;
+    return;
+  }
+  const previousId = item.id;
+  item.title = elementName.value.trim() || item.title;
+  item.id = nextId;
+  item.unit = elementUnit.value;
+  item.type = elementType.value;
+  item.min = Number(elementMin.value || 0);
+  item.max = Number(elementMax.value || 0);
+  item.step = Number(elementStep.value || 1);
+  item.unitPrice = Number(elementUnitPrice.value || 0);
+  item.minimum = Number(elementMinimum.value || 0);
+  item.tiersEnabled = tiersEnabled.checked;
+  if (item.type === "select" && item.options.length === 0) {
+    item.options.push({ value: "option", label: "Option", price: 0 });
+  }
+  if (item.type === "select") {
+    item.value = item.options[0]?.value ?? "";
+  }
+  if (previousId !== item.id) {
+    state.selected = state.selected.map((id) => (id === previousId ? item.id : id));
+    state.activeElementId = item.id;
+  }
+  renderLibrary();
+  renderAdminList();
+  renderCanvas();
+  updateSummary();
+  showToast("Element aktualisiert");
+};
+
+const wireAdminInputs = () => {
+  [elementName, elementKey, elementUnit, elementType, elementMin, elementMax, elementStep, elementUnitPrice, elementMinimum].forEach(
+    (input) => {
+      input.addEventListener("input", () => saveElementChanges());
+      input.addEventListener("change", () => saveElementChanges());
+    }
+  );
+
+  tiersEnabled.addEventListener("change", () => {
+    const item = elements.find((entry) => entry.id === state.activeElementId);
+    if (!item) return;
+    item.tiersEnabled = tiersEnabled.checked;
+    renderTiers(item);
+    updateSummary();
+  });
+
+  document.getElementById("addTier").addEventListener("click", () => {
+    const item = elements.find((entry) => entry.id === state.activeElementId);
+    if (!item) return;
+    item.tiers.push({ upTo: Infinity, price: item.unitPrice ?? 0 });
+    renderTiers(item);
+  });
+
+  document.getElementById("addOption").addEventListener("click", () => {
+    const item = elements.find((entry) => entry.id === state.activeElementId);
+    if (!item) return;
+    item.options.push({ value: "option", label: "Option", price: 0 });
+    renderOptions(item);
+    renderCanvas();
+  });
+
+  document.getElementById("saveElement").addEventListener("click", saveElementChanges);
+  document.getElementById("addElement").addEventListener("click", addNewElement);
+  document.getElementById("addUnit").addEventListener("click", (event) => {
+    event.preventDefault();
+    const value = newUnit.value.trim();
+    if (!value || units.includes(value)) {
+      showToast("Einheit ungültig oder bereits vorhanden");
+      return;
+    }
+    units.push(value);
+    newUnit.value = "";
+    renderUnitOptions();
+    renderUnits();
+    showToast("Einheit hinzugefügt");
+  });
+};
+
+const wireTabs = () => {
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((btn) => btn.classList.remove("active"));
+      tab.classList.add("active");
+      const isAdmin = tab.dataset.tab === "admin";
+      document.getElementById("builderSection").classList.toggle("hidden", isAdmin);
+      document.getElementById("pipelineSection").classList.toggle("hidden", isAdmin);
+      document.getElementById("adminSection").classList.toggle("hidden", !isAdmin);
+    });
+  });
 };
 
 const wireActions = () => {
@@ -289,7 +615,13 @@ const wireActions = () => {
   document.getElementById("createOffer").addEventListener("click", () => showToast("Angebot erstellt"));
 };
 
+renderUnitOptions();
 renderLibrary();
 renderCanvas();
+renderAdminList();
+renderAdminEditor();
+renderUnits();
 updateSummary();
 wireActions();
+wireTabs();
+wireAdminInputs();
