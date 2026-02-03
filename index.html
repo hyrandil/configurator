@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configurator Studio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">CS</div>
+          <div>
+            <p class="brand-title">Configurator Studio</p>
+            <p class="brand-subtitle">Builder & Pricing Engine</p>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h2>Element-Bibliothek</h2>
+          <p class="muted">Ziehe Elemente in den Rechner oder füge sie per Klick hinzu.</p>
+          <div class="element-list" id="elementList"></div>
+        </div>
+
+        <div class="sidebar-section">
+          <h2>Pricing Rules</h2>
+          <div class="rule-card">
+            <label class="rule-label">Globaler Rabatt</label>
+            <div class="rule-input">
+              <input type="range" id="discountRange" min="0" max="20" value="5" />
+              <span id="discountValue">5%</span>
+            </div>
+          </div>
+          <div class="rule-card">
+            <label class="rule-label">Mindestpreis</label>
+            <div class="rule-input">
+              <input type="number" id="minimumCharge" value="149" />
+              <span class="suffix">€</span>
+            </div>
+          </div>
+          <button class="ghost" id="resetBuilder">Builder zurücksetzen</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1>Configurator Studio</h1>
+            <p class="muted">Builder & Administration für Elemente, Einheiten und Staffeln.</p>
+          </div>
+          <div class="topbar-actions">
+            <button class="primary" id="saveDraft">Entwurf speichern</button>
+            <button class="accent" id="createOffer">Angebot erzeugen</button>
+          </div>
+        </header>
+
+        <nav class="tabs">
+          <button class="tab active" data-tab="builder">Builder</button>
+          <button class="tab" data-tab="admin">Elemente & Staffeln</button>
+        </nav>
+
+        <section class="builder" id="builderSection">
+          <div class="builder-header">
+            <div>
+              <h2>Cloud-Compute Angebot</h2>
+              <p class="muted">Version 1.2 • Preislisten: Standard Q4</p>
+            </div>
+            <div class="builder-meta">
+              <span>Draft</span>
+              <span class="chip">Live Pricing</span>
+            </div>
+          </div>
+
+          <div class="builder-grid">
+            <div class="canvas">
+              <h3>Konfiguration</h3>
+              <div class="canvas-body" id="canvas"></div>
+            </div>
+
+            <div class="summary">
+              <h3>Preis-Zusammenfassung</h3>
+              <div class="summary-body">
+                <div class="summary-item">
+                  <span>Zwischensumme</span>
+                  <strong id="subtotal">0 €</strong>
+                </div>
+                <div class="summary-item">
+                  <span>Rabatt</span>
+                  <strong id="discount">-0 €</strong>
+                </div>
+                <div class="summary-item">
+                  <span>Mindestpreis</span>
+                  <strong id="minimum">0 €</strong>
+                </div>
+                <div class="summary-total">
+                  <span>Gesamt / Monat</span>
+                  <strong id="total">0 €</strong>
+                </div>
+              </div>
+
+              <div class="summary-details" id="summaryDetails"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="timeline" id="pipelineSection">
+          <h2>Pricing Pipeline</h2>
+          <div class="timeline-grid">
+            <div class="timeline-card">
+              <h4>1. Validierung</h4>
+              <p>Werte prüfen, Constraints & Abhängigkeiten durchsetzen.</p>
+            </div>
+            <div class="timeline-card">
+              <h4>2. Base Prices</h4>
+              <p>Unit & Option Preise je Element berechnen.</p>
+            </div>
+            <div class="timeline-card">
+              <h4>3. Staffeln</h4>
+              <p>Mengenabhängige Stufen anwenden.</p>
+            </div>
+            <div class="timeline-card">
+              <h4>4. Rabatte</h4>
+              <p>Globaler Rabatt & Bundles auf Gesamtpreis.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin hidden" id="adminSection">
+          <div class="admin-header">
+            <div>
+              <h2>Element-Management</h2>
+              <p class="muted">Einheiten, Preise, Optionen und Staffelpreise zentral verwalten.</p>
+            </div>
+            <button class="accent" id="addElement">Neues Element</button>
+          </div>
+
+          <div class="admin-grid">
+            <div class="admin-panel">
+              <h3>Elemente</h3>
+              <div class="admin-list" id="adminList"></div>
+            </div>
+
+            <div class="admin-panel">
+              <h3>Element bearbeiten</h3>
+              <form class="admin-form" id="adminForm">
+                <div class="form-row">
+                  <label>Name</label>
+                  <input type="text" id="elementName" />
+                </div>
+                <div class="form-row">
+                  <label>Key</label>
+                  <input type="text" id="elementKey" />
+                </div>
+                <div class="form-row">
+                  <label>Einheit</label>
+                  <select id="elementUnit"></select>
+                </div>
+                <div class="form-row">
+                  <label>Typ</label>
+                  <select id="elementType">
+                    <option value="range">Slider</option>
+                    <option value="number">Number</option>
+                    <option value="select">Dropdown</option>
+                  </select>
+                </div>
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label>Min</label>
+                    <input type="number" id="elementMin" />
+                  </div>
+                  <div class="form-row">
+                    <label>Max</label>
+                    <input type="number" id="elementMax" />
+                  </div>
+                  <div class="form-row">
+                    <label>Step</label>
+                    <input type="number" id="elementStep" />
+                  </div>
+                </div>
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label>Unit-Preis (€)</label>
+                    <input type="number" id="elementUnitPrice" />
+                  </div>
+                  <div class="form-row">
+                    <label>Mindestpreis (€)</label>
+                    <input type="number" id="elementMinimum" />
+                  </div>
+                </div>
+
+                <div class="form-row inline">
+                  <input type="checkbox" id="tiersEnabled" />
+                  <label for="tiersEnabled">Staffelpreise aktivieren</label>
+                </div>
+
+                <div class="tiers" id="tiersPanel">
+                  <div class="tiers-header">
+                    <h4>Staffeln</h4>
+                    <button type="button" class="ghost" id="addTier">Staffel hinzufügen</button>
+                  </div>
+                  <div class="tiers-list" id="tiersList"></div>
+                </div>
+
+                <div class="options" id="optionsPanel">
+                  <div class="tiers-header">
+                    <h4>Dropdown-Optionen</h4>
+                    <button type="button" class="ghost" id="addOption">Option hinzufügen</button>
+                  </div>
+                  <div class="tiers-list" id="optionsList"></div>
+                </div>
+
+                <button type="button" class="primary" id="saveElement">Änderungen übernehmen</button>
+              </form>
+            </div>
+
+            <div class="admin-panel">
+              <h3>Einheiten</h3>
+              <div class="units">
+                <div class="form-row">
+                  <label>Neue Einheit</label>
+                  <div class="unit-row">
+                    <input type="text" id="newUnit" placeholder="z. B. vCPU / GB" />
+                    <button class="accent" id="addUnit">Hinzufügen</button>
+                  </div>
+                </div>
+                <div class="unit-list" id="unitList"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
